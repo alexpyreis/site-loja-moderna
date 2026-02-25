@@ -198,6 +198,8 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
     () => [...products].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 4),
     [products]
   );
+  const lookbookMain = featuredProducts[0] || null;
+  const lookbookSide = featuredProducts[1] || featuredProducts[0] || null;
   const hasCarousel = featuredProducts.length > 1;
   const centerFeaturedTrack = featuredProducts.length > 0 && featuredProducts.length <= 3;
   const singleFeaturedCard = featuredProducts.length === 1;
@@ -275,14 +277,49 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
 
   return (
     <main className="page">
-      <section className="hero premium">
-        <div className="hero-copy">
-          <h1>Moda premium para quem compra com estilo.</h1>
-          <p>Selecao moderna com visual black edition. O catalogo atualiza automaticamente.</p>
+      <section className="panel lookbook">
+        <div className="lookbook-head">
+          <span className="eyebrow">LOOKBOOK</span>
+          <h1>Autumn Essentials</h1>
+          <p>Visual editorial premium com atualizacao automatica de catalogo.</p>
         </div>
-        <button type="button" className="ghost hero-action" onClick={goToCarouselStart}>
-          Ver destaques
-        </button>
+        <div className="lookbook-stage">
+          {lookbookSide && (
+            <article className="lookbook-card lookbook-card-back">
+              <div className="media">
+                {lookbookSide.imageUrl ? (
+                  <img src={lookbookSide.imageUrl} alt={lookbookSide.name} />
+                ) : (
+                  <span>Sem imagem</span>
+                )}
+              </div>
+            </article>
+          )}
+          {lookbookMain && (
+            <article className="lookbook-card lookbook-card-front">
+              <div className="media">
+                {lookbookMain.imageUrl ? (
+                  <img src={lookbookMain.imageUrl} alt={lookbookMain.name} />
+                ) : (
+                  <span>Sem imagem</span>
+                )}
+              </div>
+              <div className="lookbook-overlay">
+                <small>WOMENSWEAR</small>
+                <h3>{lookbookMain.name}</h3>
+                <strong>{money(lookbookMain.price)}</strong>
+                <button type="button" onClick={() => onAddToCart(lookbookMain)}>
+                  Shop now
+                </button>
+              </div>
+            </article>
+          )}
+        </div>
+        <div className="lookbook-actions">
+          <button type="button" className="ghost hero-action" onClick={goToCarouselStart}>
+            Ver destaques
+          </button>
+        </div>
       </section>
 
       <section className="section-head">
