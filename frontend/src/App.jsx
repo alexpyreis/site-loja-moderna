@@ -12,6 +12,9 @@ const initialForm = {
   price: "",
   imageUrl: "",
 };
+const adminPath = import.meta.env.VITE_ADMIN_PATH || "/_owner-area-2049";
+const adminTokenStorageKey = "admin_token";
+const adminTokenExpiryStorageKey = "admin_token_expires_at";
 
 function money(value) {
   return Number(value).toLocaleString("pt-BR", {
@@ -110,7 +113,6 @@ export default function App() {
         <nav>
           <NavLink to="/">Loja</NavLink>
           <NavLink to="/compras">Compras</NavLink>
-          <NavLink to="/admin-secreto">Admin</NavLink>
         </nav>
         <button className="cart-pill" onClick={() => setCartOpen((v) => !v)} type="button">
           Carrinho ({cartCount})
@@ -135,7 +137,7 @@ export default function App() {
           element={<CheckoutPage cart={cart} cartTotal={cartTotal} onChangeQty={changeQty} />}
         />
         <Route
-          path="/admin-secreto"
+          path={adminPath}
           element={<AdminPage products={products} onRefresh={loadProducts} onDelete={removeFromCart} />}
         />
       </Routes>
@@ -431,7 +433,7 @@ function CheckoutPage({ cart, cartTotal, onChangeQty }) {
 }
 
 function AdminPage({ products, onRefresh }) {
-  const [secret, setSecret] = useState(localStorage.getItem("admin_secret") || "");
+  const [token, setToken] = useState(localStorage.getItem(adminTokenStorageKey) || "");
   const [typedSecret, setTypedSecret] = useState("");
   const [authError, setAuthError] = useState("");
   const [form, setForm] = useState(initialForm);
@@ -441,9 +443,10 @@ function AdminPage({ products, onRefresh }) {
   async function authLogin(event) {
     event.preventDefault();
     try {
-      await api.post("/admin/session", { secret: typedSecret });
-      localStorage.setItem("admin_secret", typedSecret);
-      setSecret(typedSecret);
+      const { data } = await api.post("/admin/session", { secret: typedSecret });
+      localStorage.setItem(adminTokenStorageKey, data.token);
+      localStorage.setItem(adminTokenExpiryStorageKey, String(data.expiresAt));
+      setToken(data.token);
       setTypedSecret("");
       setAuthError("");
     } catch {
@@ -451,9 +454,22 @@ function AdminPage({ products, onRefresh }) {
     }
   }
 
-  function logout() {
-    localStorage.removeItem("admin_secret");
-    setSecret("");
+  async function logout() {
+    try {
+      await api.post(
+        "/admin/logout",
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch {
+      // Se a sessao ja expirou no backend, ainda limpamos localmente.
+    } finally {
+      localStorage.removeItem(adminTokenStorageKey);
+      localStorage.removeItem(adminTokenExpiryStorageKey);
+      setToken("");
+    }
   }
 
   async function submitProduct(event) {
@@ -461,7 +477,7 @@ function AdminPage({ products, onRefresh }) {
     setSaving(true);
     try {
       const payload = { ...form, price: Number(form.price) };
-      const config = { headers: { "x-admin-secret": secret } };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
       if (editingId) {
         await api.put(`/products/${editingId}`, payload, config);
       } else {
@@ -477,7 +493,7 @@ function AdminPage({ products, onRefresh }) {
 
   async function deleteProduct(id) {
     await api.delete(`/products/${id}`, {
-      headers: { "x-admin-secret": secret },
+      headers: { Authorization: `Bearer ${token}` },
     });
     await onRefresh();
   }
@@ -492,11 +508,20 @@ function AdminPage({ products, onRefresh }) {
     });
   }
 
-  if (!secret) {
+  useEffect(() => {
+    const storedExpiry = Number(localStorage.getItem(adminTokenExpiryStorageKey) || 0);
+    if (!token || !storedExpiry || storedExpiry <= Date.now()) {
+      localStorage.removeItem(adminTokenStorageKey);
+      localStorage.removeItem(adminTokenExpiryStorageKey);
+      setToken("");
+    }
+  }, [token]);
+
+  if (!token) {
     return (
       <main className="page">
         <section className="panel admin-login">
-          <h2>Area admin secreta</h2>
+          <h2>Acesso interno</h2>
           <p className="muted">Apenas para gerenciamento interno da loja.</p>
           <form className="form" onSubmit={authLogin}>
             <input

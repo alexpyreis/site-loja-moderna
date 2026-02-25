@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
@@ -12,10 +13,12 @@ const FRONTEND_DIST =
   process.env.FRONTEND_DIST || path.resolve(__dirname, "..", "..", "frontend", "dist");
 const indexPath = path.join(FRONTEND_DIST, "index.html");
 const shouldServeFrontend = process.env.SERVE_FRONTEND === "true" || fs.existsSync(indexPath);
+const ADMIN_SESSION_TTL_MS = Number(process.env.ADMIN_SESSION_TTL_MS || 1000 * 60 * 60 * 12);
 const allowedOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const adminSessions = new Map();
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL nao configurada.");
@@ -38,7 +41,27 @@ app.use(
 );
 app.use(express.json());
 
+function createAdminToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function isSessionValid(token) {
+  const expiresAt = adminSessions.get(token);
+  if (!expiresAt) return false;
+  if (expiresAt < Date.now()) {
+    adminSessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
 function requireAdmin(req, res, next) {
+  const authHeader = req.headers.authorization || "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (bearerToken && isSessionValid(bearerToken)) {
+    return next();
+  }
+
   const provided = req.headers["x-admin-secret"];
   if (!provided || provided !== ADMIN_SECRET) {
     return res.status(401).json({ error: "Acesso admin negado." });
@@ -54,6 +77,18 @@ app.post("/api/admin/session", (req, res) => {
   const { secret } = req.body || {};
   if (!secret || secret !== ADMIN_SECRET) {
     return res.status(401).json({ ok: false, error: "Senha admin invalida." });
+  }
+  const token = createAdminToken();
+  const expiresAt = Date.now() + ADMIN_SESSION_TTL_MS;
+  adminSessions.set(token, expiresAt);
+  return res.json({ ok: true, token, expiresAt });
+});
+
+app.post("/api/admin/logout", requireAdmin, (req, res) => {
+  const authHeader = req.headers.authorization || "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (bearerToken) {
+    adminSessions.delete(bearerToken);
   }
   return res.json({ ok: true });
 });

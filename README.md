@@ -75,9 +75,11 @@ Variavel de ambiente no Vercel:
 
 ```env
 VITE_API_URL=https://seu-backend.onrender.com/api
+VITE_ADMIN_PATH=/sua-rota-admin-unica
 ```
 
-Observacao: o arquivo `frontend/vercel.json` ja foi adicionado para funcionar com rotas SPA (`/`, `/compras`, `/admin-secreto`) sem erro 404.
+Observacao: o arquivo `frontend/vercel.json` ja foi adicionado para funcionar com rotas SPA (`/`, `/compras` e sua rota privada de admin) sem erro 404.
+Observacao 2: o painel admin nao aparece no menu publico. O acesso e somente pela rota definida em `VITE_ADMIN_PATH`.
 
 ## Fluxo
 
