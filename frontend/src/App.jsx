@@ -199,6 +199,8 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
     [products]
   );
   const hasCarousel = featuredProducts.length > 1;
+  const centerFeaturedTrack = featuredProducts.length > 0 && featuredProducts.length <= 3;
+  const singleFeaturedCard = featuredProducts.length === 1;
 
   function scrollCarousel(direction) {
     if (!carouselRef.current) return;
@@ -298,17 +300,21 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
           <section className="panel carousel-panel">
             <div className="section-head section-head-tight">
               <h2>Destaques ({featuredProducts.length})</h2>
-              <div className="carousel-controls">
-                <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(-1)}>
-                  {"<"}
-                </button>
-                <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(1)}>
-                  {">"}
-                </button>
-              </div>
+              {hasCarousel && (
+                <div className="carousel-controls">
+                  <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(-1)}>
+                    {"<"}
+                  </button>
+                  <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(1)}>
+                    {">"}
+                  </button>
+                </div>
+              )}
             </div>
             <div
-              className="carousel-track"
+              className={`carousel-track ${centerFeaturedTrack ? "centered" : ""} ${
+                singleFeaturedCard ? "single" : ""
+              }`}
               ref={carouselRef}
               onMouseEnter={() => setAutoplayPaused(true)}
               onMouseLeave={() => setAutoplayPaused(false)}

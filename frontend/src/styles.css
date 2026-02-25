@@ -277,9 +277,7 @@ button {
 
 .carousel-track {
   margin-top: 10px;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(210px, 28%);
+  display: flex;
   gap: 12px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -300,7 +298,21 @@ button {
 
 .carousel-card {
   min-height: 100%;
+  width: min(100%, 340px);
+  flex: 0 0 clamp(230px, 30vw, 340px);
   scroll-snap-align: start;
+}
+
+.carousel-track.centered {
+  justify-content: center;
+}
+
+.carousel-track.single {
+  overflow-x: hidden;
+}
+
+.carousel-track.single .carousel-card {
+  flex-basis: min(360px, 100%);
 }
 
 .carousel-dots {
@@ -410,8 +422,8 @@ button {
 }
 
 @media (max-width: 1024px) {
-  .carousel-track {
-    grid-auto-columns: minmax(230px, 42%);
+  .carousel-card {
+    flex-basis: min(320px, 42vw);
   }
 
   .cart-hud {
@@ -467,7 +479,11 @@ button {
   }
 
   .carousel-track {
-    grid-auto-columns: minmax(240px, 75%);
+    justify-content: start;
+  }
+
+  .carousel-card {
+    flex-basis: min(300px, 75vw);
   }
 
   .cart-hud {
@@ -504,7 +520,12 @@ button {
   }
 
   .carousel-track {
-    grid-auto-columns: 84%;
+    justify-content: start;
+  }
+
+  .carousel-card {
+    flex-basis: 84%;
+    width: 84%;
   }
 
   .checkout-form input {
