@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { NavLink, Route, Routes } from "react-router-dom";
 
@@ -42,6 +42,21 @@ export default function App() {
 
   useEffect(() => {
     loadProducts();
+
+    const refreshOnFocus = () => loadProducts();
+    const refreshOnVisible = () => {
+      if (document.visibilityState === "visible") loadProducts();
+    };
+    const interval = setInterval(loadProducts, 30000);
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnVisible);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnVisible);
+    };
   }, []);
 
   useEffect(() => {
@@ -167,11 +182,103 @@ export default function App() {
 }
 
 function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
+  const carouselRef = useRef(null);
+  const autoplayRef = useRef(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [autoplayPaused, setAutoplayPaused] = useState(false);
+
+  const featuredProducts = useMemo(() => products.slice(0, 8), [products]);
+  const budgetProducts = useMemo(
+    () => [...products].sort((a, b) => Number(a.price) - Number(b.price)).slice(0, 4),
+    [products]
+  );
+  const premiumProducts = useMemo(
+    () => [...products].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 4),
+    [products]
+  );
+  const hasCarousel = featuredProducts.length > 1;
+
+  function scrollCarousel(direction) {
+    if (!carouselRef.current) return;
+    const amount = Math.max(carouselRef.current.clientWidth * 0.8, 260);
+    carouselRef.current.scrollBy({ left: direction * amount, behavior: "smooth" });
+  }
+
+  function goToCarouselStart() {
+    if (!carouselRef.current) return;
+    carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+  }
+
+  function scrollToSlide(index) {
+    if (!carouselRef.current) return;
+    const slide = carouselRef.current.children[index];
+    if (!slide) return;
+    carouselRef.current.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
+  }
+
+  function goToNextSlide() {
+    if (!hasCarousel) return;
+    const nextIndex = activeSlide >= featuredProducts.length - 1 ? 0 : activeSlide + 1;
+    scrollToSlide(nextIndex);
+  }
+
+  useEffect(() => {
+    if (!carouselRef.current || featuredProducts.length === 0) {
+      setActiveSlide(0);
+      return;
+    }
+
+    const track = carouselRef.current;
+    const onScroll = () => {
+      const firstSlide = track.children[0];
+      if (!firstSlide) {
+        setActiveSlide(0);
+        return;
+      }
+      const slideWidth = firstSlide.clientWidth + 12;
+      const index = Math.max(0, Math.min(featuredProducts.length - 1, Math.round(track.scrollLeft / slideWidth)));
+      setActiveSlide(index);
+    };
+
+    onScroll();
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, [featuredProducts]);
+
+  useEffect(() => {
+    if (!hasCarousel || autoplayPaused) return;
+    autoplayRef.current = setInterval(goToNextSlide, 3500);
+    return () => {
+      if (autoplayRef.current) clearInterval(autoplayRef.current);
+    };
+  }, [hasCarousel, autoplayPaused, activeSlide, featuredProducts.length]);
+
+  function ProductCard({ product, cardClassName = "product-card" }) {
+    return (
+      <article className={cardClassName} key={product.id}>
+        <div className="media">
+          {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
+        </div>
+        <h3>{product.name}</h3>
+        <p>{product.description}</p>
+        <strong>{money(product.price)}</strong>
+        <button type="button" onClick={() => onAddToCart(product)}>
+          Adicionar ao carrinho
+        </button>
+      </article>
+    );
+  }
+
   return (
     <main className="page">
       <section className="hero premium">
-        <h1>Moda premium para quem compra com estilo.</h1>
-        <p>Selecao moderna com visual black edition.</p>
+        <div className="hero-copy">
+          <h1>Moda premium para quem compra com estilo.</h1>
+          <p>Selecao moderna com visual black edition. O catalogo atualiza automaticamente.</p>
+        </div>
+        <button type="button" className="ghost hero-action" onClick={goToCarouselStart}>
+          Ver destaques
+        </button>
       </section>
 
       <section className="section-head">
@@ -185,21 +292,84 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
       {loading ? (
         <p className="muted">Carregando produtos...</p>
       ) : (
-        <section className="grid">
-          {products.map((product) => (
-            <article className="product-card" key={product.id}>
-              <div className="media">
-                {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
+        <>
+          <section className="panel carousel-panel">
+            <div className="section-head section-head-tight">
+              <h2>Destaques ({featuredProducts.length})</h2>
+              <div className="carousel-controls">
+                <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(-1)}>
+                  {"<"}
+                </button>
+                <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(1)}>
+                  {">"}
+                </button>
               </div>
-              <h3>{product.name}</h3>
-              <p>{product.description}</p>
-              <strong>{money(product.price)}</strong>
-              <button type="button" onClick={() => onAddToCart(product)}>
-                Adicionar ao carrinho
-              </button>
-            </article>
-          ))}
-        </section>
+            </div>
+            <div
+              className="carousel-track"
+              ref={carouselRef}
+              onMouseEnter={() => setAutoplayPaused(true)}
+              onMouseLeave={() => setAutoplayPaused(false)}
+              onTouchStart={() => setAutoplayPaused(true)}
+              onTouchEnd={() => setAutoplayPaused(false)}
+            >
+              {featuredProducts.map((product) => (
+                <ProductCard
+                  product={product}
+                  key={`featured-${product.id}`}
+                  cardClassName="product-card carousel-card"
+                />
+              ))}
+            </div>
+            {featuredProducts.length > 1 && (
+              <div className="carousel-dots" role="tablist" aria-label="Selecionar slide de destaque">
+                {featuredProducts.map((product, index) => (
+                  <button
+                    key={`dot-${product.id}`}
+                    type="button"
+                    className={`carousel-dot ${index === activeSlide ? "active" : ""}`}
+                    aria-label={`Ir para destaque ${index + 1}`}
+                    aria-selected={index === activeSlide}
+                    onClick={() => scrollToSlide(index)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <div className="section-head section-head-tight">
+              <h2>Mais acessiveis ({budgetProducts.length})</h2>
+            </div>
+            <div className="grid grid-featured">
+              {budgetProducts.map((product) => (
+                <ProductCard product={product} key={`budget-${product.id}`} />
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="section-head section-head-tight">
+              <h2>Premium ({premiumProducts.length})</h2>
+            </div>
+            <div className="grid grid-featured">
+              {premiumProducts.map((product) => (
+                <ProductCard product={product} key={`premium-${product.id}`} />
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <div className="section-head section-head-tight">
+              <h2>Todos os produtos ({products.length})</h2>
+            </div>
+            <div className="grid">
+              {products.map((product) => (
+                <ProductCard product={product} key={product.id} />
+              ))}
+            </div>
+          </section>
+        </>
       )}
     </main>
   );

@@ -2,6 +2,11 @@
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   color: #f3f3f3;
   background: #050505;
+  --container-max: 1180px;
+  --surface: #101010;
+  --surface-alt: #0d0d0d;
+  --border: #1f1f1f;
+  --text-muted: #a3a3a3;
 }
 
 * {
@@ -15,6 +20,10 @@ body {
     radial-gradient(circle at 8% 0%, rgba(80, 80, 80, 0.2), transparent 40%),
     radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.12), transparent 30%),
     #080808;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 a {
@@ -34,7 +43,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   padding: 14px 22px;
   background: rgba(10, 10, 10, 0.85);
   border-bottom: 1px solid #1f1f1f;
@@ -49,6 +58,8 @@ a {
 nav {
   display: flex;
   gap: 14px;
+  align-items: center;
+  min-width: 0;
 }
 
 nav a {
@@ -71,17 +82,21 @@ nav a.active {
 }
 
 .page {
-  max-width: 1180px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 20px;
   display: grid;
-  gap: 16px;
+  gap: clamp(14px, 2vw, 18px);
 }
 
 .hero {
   border-radius: 22px;
-  padding: 34px;
-  border: 1px solid #1f1f1f;
+  padding: clamp(18px, 3vw, 34px);
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 14px;
 }
 
 .hero.premium {
@@ -93,15 +108,25 @@ nav a.active {
 .hero h1 {
   margin: 0;
   font-size: clamp(1.6rem, 3vw, 2.8rem);
+  line-height: 1.08;
 }
 
 .hero p {
   color: #b7b7b7;
+  margin-bottom: 0;
+}
+
+.hero-copy {
+  max-width: 720px;
+}
+
+.hero-action {
+  white-space: nowrap;
 }
 
 .panel {
   border: 1px solid #1d1d1d;
-  background: #0d0d0d;
+  background: var(--surface-alt);
   border-radius: 20px;
   padding: 18px;
 }
@@ -115,6 +140,11 @@ nav a.active {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.section-head-tight h2 {
+  margin: 0;
 }
 
 .form,
@@ -131,7 +161,7 @@ button {
 
 input,
 textarea {
-  background: #101010;
+  background: var(--surface);
   border: 1px solid #232323;
   color: #f4f4f4;
   border-radius: 12px;
@@ -169,13 +199,20 @@ button {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
+.grid-featured {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 .product-card {
-  border: 1px solid #1f1f1f;
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #101010;
+  background: var(--surface);
   padding: 12px;
   display: grid;
   gap: 8px;
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+  transform-origin: center;
+  will-change: transform;
 }
 
 .product-card h3,
@@ -184,7 +221,7 @@ button {
 }
 
 .product-card p {
-  color: #a3a3a3;
+  color: var(--text-muted);
   min-height: 40px;
 }
 
@@ -197,17 +234,97 @@ button {
   display: grid;
   place-items: center;
   color: #7f7f7f;
+  isolation: isolate;
 }
 
 .media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 240ms ease;
+}
+
+.product-card:hover,
+.product-card:focus-within {
+  transform: translateY(-3px) scale(1.015);
+  border-color: #3b3b3b;
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.32);
+}
+
+.product-card:hover .media img,
+.product-card:focus-within .media img {
+  transform: scale(1.09);
 }
 
 .actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.carousel-panel {
+  overflow: hidden;
+}
+
+.carousel-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-btn {
+  min-width: 44px;
+}
+
+.carousel-track {
+  margin-top: 10px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(210px, 28%);
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding: 4px 4px 8px;
+  touch-action: pan-x;
+}
+
+.carousel-track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.carousel-track::-webkit-scrollbar-thumb {
+  background: #2f2f2f;
+  border-radius: 999px;
+}
+
+.carousel-card {
+  min-height: 100%;
+  scroll-snap-align: start;
+}
+
+.carousel-dots {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid #535353;
+  background: transparent;
+  padding: 0;
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.carousel-dot.active {
+  transform: scale(1.15);
+  border-color: #ffffff;
+  background: #ffffff;
 }
 
 .cart-hud {
@@ -292,6 +409,17 @@ button {
   max-width: 420px;
 }
 
+@media (max-width: 1024px) {
+  .carousel-track {
+    grid-auto-columns: minmax(230px, 42%);
+  }
+
+  .cart-hud {
+    right: 10px;
+    width: min(380px, calc(100% - 20px));
+  }
+}
+
 @media (max-width: 900px) {
   .checkout-grid {
     grid-template-columns: 1fr;
@@ -299,9 +427,87 @@ button {
 
   .topbar {
     flex-wrap: wrap;
+    padding: 12px 14px;
   }
 
   nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  nav a {
+    white-space: nowrap;
+  }
+
+  .cart-pill {
+    margin-left: auto;
+  }
+
+  .hero {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .hero-action {
+    width: 100%;
+  }
+
+  .page {
+    padding: 14px;
+  }
+
+  .section-head button,
+  .product-card button,
+  .checkout-form button,
+  .actions button {
+    width: 100%;
+  }
+
+  .carousel-track {
+    grid-auto-columns: minmax(240px, 75%);
+  }
+
+  .cart-hud {
+    top: auto;
+    bottom: 10px;
+    max-height: 74vh;
+  }
+}
+
+@media (max-width: 640px) {
+  .logo {
+    width: 100%;
+  }
+
+  .topbar {
+    gap: 10px;
+  }
+
+  nav {
+    order: 3;
+  }
+
+  .cart-pill {
+    order: 2;
+  }
+
+  .grid,
+  .grid-featured {
+    grid-template-columns: 1fr;
+  }
+
+  .product-card p {
+    min-height: 0;
+  }
+
+  .carousel-track {
+    grid-auto-columns: 84%;
+  }
+
+  .checkout-form input {
     width: 100%;
   }
 }

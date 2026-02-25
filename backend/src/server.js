@@ -1,11 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
+const fs = require("fs");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "troque-esta-senha";
+const FRONTEND_DIST =
+  process.env.FRONTEND_DIST || path.resolve(__dirname, "..", "..", "frontend", "dist");
+const indexPath = path.join(FRONTEND_DIST, "index.html");
+const shouldServeFrontend = process.env.SERVE_FRONTEND === "true" || fs.existsSync(indexPath);
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL nao configurada.");
@@ -17,7 +27,15 @@ const pool = new Pool({
   ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : false,
 });
 
-app.use(cors());
+app.use(
+  cors(
+    allowedOrigins.length > 0
+      ? {
+          origin: allowedOrigins,
+        }
+      : undefined
+  )
+);
 app.use(express.json());
 
 function requireAdmin(req, res, next) {
@@ -151,6 +169,14 @@ app.delete("/api/products/:id", requireAdmin, async (req, res) => {
     res.status(500).json({ error: "Falha ao remover produto." });
   }
 });
+
+if (shouldServeFrontend) {
+  app.use(express.static(FRONTEND_DIST));
+
+  app.get(/^(?!\/api).*/, (req, res) => {
+    return res.sendFile(indexPath);
+  });
+}
 
 initDatabase()
   .then(() => {

@@ -41,6 +41,44 @@ npm run dev
 
 Frontend em `http://localhost:5173`.
 
+## Deploy (Vercel + Render + Supabase)
+
+### 1) Backend no Render
+
+- Root Directory: `backend`
+- Build Command: `npm install`
+- Start Command: `npm run start`
+
+Variaveis de ambiente no Render:
+
+```env
+DATABASE_URL=postgresql://postgres.xxxxx:senha@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+DATABASE_SSL=true
+ADMIN_SECRET=sua-senha-admin-forte
+CORS_ORIGIN=https://seu-front.vercel.app
+```
+
+Opcional:
+
+```env
+SERVE_FRONTEND=false
+```
+
+### 2) Frontend no Vercel
+
+- Root Directory: `frontend`
+- Framework Preset: `Vite`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+Variavel de ambiente no Vercel:
+
+```env
+VITE_API_URL=https://seu-backend.onrender.com/api
+```
+
+Observacao: o arquivo `frontend/vercel.json` ja foi adicionado para funcionar com rotas SPA (`/`, `/compras`, `/admin-secreto`) sem erro 404.
+
 ## Fluxo
 
 1. Cadastre um produto no formulario da tela.
