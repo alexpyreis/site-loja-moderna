@@ -6,21 +6,44 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
 });
 
+const adminPath = import.meta.env.VITE_ADMIN_PATH || "/_owner-area-2049";
+const adminTokenStorageKey = "admin_token";
+const adminTokenExpiryStorageKey = "admin_token_expires_at";
+
 const initialForm = {
   name: "",
   description: "",
   price: "",
   imageUrl: "",
 };
-const adminPath = import.meta.env.VITE_ADMIN_PATH || "/_owner-area-2049";
-const adminTokenStorageKey = "admin_token";
-const adminTokenExpiryStorageKey = "admin_token_expires_at";
 
 function money(value) {
   return Number(value).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
+}
+
+function ProductCard({ product, onAddToCart, compact = false }) {
+  return (
+    <article className={`product-card ${compact ? "compact" : ""}`}>
+      <div className="media">
+        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
+      </div>
+      <div className="product-body">
+        <h3>{product.name}</h3>
+        <p>{product.description}</p>
+        <div className="product-foot">
+          <strong>{money(product.price)}</strong>
+          {onAddToCart && (
+            <button type="button" onClick={() => onAddToCart(product)}>
+              Adicionar
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 export default function App() {
@@ -45,16 +68,13 @@ export default function App() {
 
   useEffect(() => {
     loadProducts();
-
     const refreshOnFocus = () => loadProducts();
     const refreshOnVisible = () => {
       if (document.visibilityState === "visible") loadProducts();
     };
     const interval = setInterval(loadProducts, 30000);
-
     window.addEventListener("focus", refreshOnFocus);
     document.addEventListener("visibilitychange", refreshOnVisible);
-
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", refreshOnFocus);
@@ -89,18 +109,11 @@ export default function App() {
     );
   }
 
-  function removeFromCart(id) {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  }
-
   function clearCart() {
     setCart([]);
   }
 
-  const cartCount = useMemo(
-    () => cart.reduce((sum, item) => sum + item.quantity, 0),
-    [cart]
-  );
+  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
   const cartTotal = useMemo(
     () => cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0),
     [cart]
@@ -136,16 +149,13 @@ export default function App() {
           path="/compras"
           element={<CheckoutPage cart={cart} cartTotal={cartTotal} onChangeQty={changeQty} />}
         />
-        <Route
-          path={adminPath}
-          element={<AdminPage products={products} onRefresh={loadProducts} onDelete={removeFromCart} />}
-        />
+        <Route path={adminPath} element={<AdminPage products={products} onRefresh={loadProducts} />} />
       </Routes>
 
       <aside className={`cart-hud ${cartOpen ? "open" : ""}`}>
         <div className="cart-head">
-          <h3>Carrinho</h3>
-          <button type="button" onClick={() => setCartOpen(false)}>
+          <h3>Sacola</h3>
+          <button type="button" className="ghost" onClick={() => setCartOpen(false)}>
             Fechar
           </button>
         </div>
@@ -184,148 +194,35 @@ export default function App() {
 }
 
 function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
-  const carouselRef = useRef(null);
-  const autoplayRef = useRef(null);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [autoplayPaused, setAutoplayPaused] = useState(false);
-
-  const featuredProducts = useMemo(() => products.slice(0, 8), [products]);
-  const budgetProducts = useMemo(
-    () => [...products].sort((a, b) => Number(a.price) - Number(b.price)).slice(0, 4),
+  const railRef = useRef(null);
+  const featured = useMemo(() => products.slice(0, 10), [products]);
+  const budget = useMemo(
+    () => [...products].sort((a, b) => Number(a.price) - Number(b.price)).slice(0, 6),
     [products]
   );
-  const premiumProducts = useMemo(
-    () => [...products].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 4),
+  const premium = useMemo(
+    () => [...products].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 6),
     [products]
   );
-  const lookbookMain = featuredProducts[0] || null;
-  const lookbookSide = featuredProducts[1] || featuredProducts[0] || null;
-  const hasCarousel = featuredProducts.length > 1;
-  const centerFeaturedTrack = featuredProducts.length > 0 && featuredProducts.length <= 3;
-  const singleFeaturedCard = featuredProducts.length === 1;
 
-  function scrollCarousel(direction) {
-    if (!carouselRef.current) return;
-    const amount = Math.max(carouselRef.current.clientWidth * 0.8, 260);
-    carouselRef.current.scrollBy({ left: direction * amount, behavior: "smooth" });
-  }
-
-  function goToCarouselStart() {
-    if (!carouselRef.current) return;
-    carouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
-  }
-
-  function scrollToSlide(index) {
-    if (!carouselRef.current) return;
-    const slide = carouselRef.current.children[index];
-    if (!slide) return;
-    carouselRef.current.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
-  }
-
-  function goToNextSlide() {
-    if (!hasCarousel) return;
-    const nextIndex = activeSlide >= featuredProducts.length - 1 ? 0 : activeSlide + 1;
-    scrollToSlide(nextIndex);
-  }
-
-  useEffect(() => {
-    if (!carouselRef.current || featuredProducts.length === 0) {
-      setActiveSlide(0);
-      return;
-    }
-
-    const track = carouselRef.current;
-    const onScroll = () => {
-      const firstSlide = track.children[0];
-      if (!firstSlide) {
-        setActiveSlide(0);
-        return;
-      }
-      const slideWidth = firstSlide.clientWidth + 12;
-      const index = Math.max(0, Math.min(featuredProducts.length - 1, Math.round(track.scrollLeft / slideWidth)));
-      setActiveSlide(index);
-    };
-
-    onScroll();
-    track.addEventListener("scroll", onScroll, { passive: true });
-    return () => track.removeEventListener("scroll", onScroll);
-  }, [featuredProducts]);
-
-  useEffect(() => {
-    if (!hasCarousel || autoplayPaused) return;
-    autoplayRef.current = setInterval(goToNextSlide, 3500);
-    return () => {
-      if (autoplayRef.current) clearInterval(autoplayRef.current);
-    };
-  }, [hasCarousel, autoplayPaused, activeSlide, featuredProducts.length]);
-
-  function ProductCard({ product, cardClassName = "product-card" }) {
-    return (
-      <article className={cardClassName} key={product.id}>
-        <div className="media">
-          {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
-        </div>
-        <h3>{product.name}</h3>
-        <p>{product.description}</p>
-        <strong>{money(product.price)}</strong>
-        <button type="button" onClick={() => onAddToCart(product)}>
-          Adicionar ao carrinho
-        </button>
-      </article>
-    );
+  function scrollRail(direction) {
+    if (!railRef.current) return;
+    railRef.current.scrollBy({
+      left: direction * Math.max(railRef.current.clientWidth * 0.8, 280),
+      behavior: "smooth",
+    });
   }
 
   return (
     <main className="page">
-      <section className="panel lookbook">
-        <div className="lookbook-head">
-          <span className="eyebrow">LOOKBOOK</span>
-          <h1>Autumn Essentials</h1>
-          <p>Visual editorial premium com atualizacao automatica de catalogo.</p>
+      <section className="hero">
+        <div>
+          <span className="kicker">STUDIO COLLECTION</span>
+          <h1>Loja refeita do zero com foco em design e performance.</h1>
+          <p>Visual premium escuro, responsivo de verdade e atualizado automaticamente pelo seu backend.</p>
         </div>
-        <div className="lookbook-stage">
-          {lookbookSide && (
-            <article className="lookbook-card lookbook-card-back">
-              <div className="media">
-                {lookbookSide.imageUrl ? (
-                  <img src={lookbookSide.imageUrl} alt={lookbookSide.name} />
-                ) : (
-                  <span>Sem imagem</span>
-                )}
-              </div>
-            </article>
-          )}
-          {lookbookMain && (
-            <article className="lookbook-card lookbook-card-front">
-              <div className="media">
-                {lookbookMain.imageUrl ? (
-                  <img src={lookbookMain.imageUrl} alt={lookbookMain.name} />
-                ) : (
-                  <span>Sem imagem</span>
-                )}
-              </div>
-              <div className="lookbook-overlay">
-                <small>WOMENSWEAR</small>
-                <h3>{lookbookMain.name}</h3>
-                <strong>{money(lookbookMain.price)}</strong>
-                <button type="button" onClick={() => onAddToCart(lookbookMain)}>
-                  Shop now
-                </button>
-              </div>
-            </article>
-          )}
-        </div>
-        <div className="lookbook-actions">
-          <button type="button" className="ghost hero-action" onClick={goToCarouselStart}>
-            Ver destaques
-          </button>
-        </div>
-      </section>
-
-      <section className="section-head">
-        <h2>Catalogo</h2>
-        <button type="button" onClick={onRefresh}>
-          Atualizar
+        <button type="button" className="ghost" onClick={onRefresh}>
+          Atualizar catalogo
         </button>
       </section>
 
@@ -334,83 +231,56 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
         <p className="muted">Carregando produtos...</p>
       ) : (
         <>
-          <section className="panel carousel-panel">
-            <div className="section-head section-head-tight">
-              <h2>Destaques ({featuredProducts.length})</h2>
-              {hasCarousel && (
-                <div className="carousel-controls">
-                  <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(-1)}>
+          <section className="panel">
+            <div className="section-head">
+              <h2>Destaques ({featured.length})</h2>
+              {featured.length > 1 && (
+                <div className="controls">
+                  <button type="button" className="ghost" onClick={() => scrollRail(-1)}>
                     {"<"}
                   </button>
-                  <button type="button" className="ghost carousel-btn" onClick={() => scrollCarousel(1)}>
+                  <button type="button" className="ghost" onClick={() => scrollRail(1)}>
                     {">"}
                   </button>
                 </div>
               )}
             </div>
-            <div
-              className={`carousel-track ${centerFeaturedTrack ? "centered" : ""} ${
-                singleFeaturedCard ? "single" : ""
-              }`}
-              ref={carouselRef}
-              onMouseEnter={() => setAutoplayPaused(true)}
-              onMouseLeave={() => setAutoplayPaused(false)}
-              onTouchStart={() => setAutoplayPaused(true)}
-              onTouchEnd={() => setAutoplayPaused(false)}
-            >
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  product={product}
-                  key={`featured-${product.id}`}
-                  cardClassName="product-card carousel-card"
-                />
-              ))}
-            </div>
-            {featuredProducts.length > 1 && (
-              <div className="carousel-dots" role="tablist" aria-label="Selecionar slide de destaque">
-                {featuredProducts.map((product, index) => (
-                  <button
-                    key={`dot-${product.id}`}
-                    type="button"
-                    className={`carousel-dot ${index === activeSlide ? "active" : ""}`}
-                    aria-label={`Ir para destaque ${index + 1}`}
-                    aria-selected={index === activeSlide}
-                    onClick={() => scrollToSlide(index)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <div className="section-head section-head-tight">
-              <h2>Mais acessiveis ({budgetProducts.length})</h2>
-            </div>
-            <div className="grid grid-featured">
-              {budgetProducts.map((product) => (
-                <ProductCard product={product} key={`budget-${product.id}`} />
+            <div className="featured-rail" ref={railRef}>
+              {featured.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} compact />
               ))}
             </div>
           </section>
 
-          <section>
-            <div className="section-head section-head-tight">
-              <h2>Premium ({premiumProducts.length})</h2>
+          <section className="catalog-block">
+            <div className="section-head">
+              <h2>Mais acessiveis</h2>
             </div>
-            <div className="grid grid-featured">
-              {premiumProducts.map((product) => (
-                <ProductCard product={product} key={`premium-${product.id}`} />
+            <div className="grid">
+              {budget.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
               ))}
             </div>
           </section>
 
-          <section>
-            <div className="section-head section-head-tight">
+          <section className="catalog-block">
+            <div className="section-head">
+              <h2>Premium</h2>
+            </div>
+            <div className="grid">
+              {premium.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+              ))}
+            </div>
+          </section>
+
+          <section className="catalog-block">
+            <div className="section-head">
               <h2>Todos os produtos ({products.length})</h2>
             </div>
             <div className="grid">
               {products.map((product) => (
-                <ProductCard product={product} key={product.id} />
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
               ))}
             </div>
           </section>
@@ -422,7 +292,6 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
 
 function CheckoutPage({ cart, cartTotal, onChangeQty }) {
   const [placed, setPlaced] = useState(false);
-
   function onSubmit(event) {
     event.preventDefault();
     setPlaced(true);
@@ -430,13 +299,13 @@ function CheckoutPage({ cart, cartTotal, onChangeQty }) {
 
   return (
     <main className="page">
-      <section className="panel dark">
-        <h2>Pagina de compras</h2>
-        <p className="muted">Finalize seus itens com um fluxo premium.</p>
+      <section className="panel">
+        <h2>Checkout</h2>
+        <p className="muted">Revise os itens e finalize com seguranca.</p>
       </section>
       <section className="panel">
         {cart.length === 0 ? (
-          <p className="muted">Adicione produtos no carrinho para continuar.</p>
+          <p className="muted">Seu carrinho esta vazio.</p>
         ) : (
           <div className="checkout-grid">
             <div className="line-items">
@@ -483,6 +352,15 @@ function AdminPage({ products, onRefresh }) {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    const storedExpiry = Number(localStorage.getItem(adminTokenExpiryStorageKey) || 0);
+    if (!token || !storedExpiry || storedExpiry <= Date.now()) {
+      localStorage.removeItem(adminTokenStorageKey);
+      localStorage.removeItem(adminTokenExpiryStorageKey);
+      setToken("");
+    }
+  }, [token]);
+
   async function authLogin(event) {
     event.preventDefault();
     try {
@@ -506,8 +384,6 @@ function AdminPage({ products, onRefresh }) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-    } catch {
-      // Se a sessao ja expirou no backend, ainda limpamos localmente.
     } finally {
       localStorage.removeItem(adminTokenStorageKey);
       localStorage.removeItem(adminTokenExpiryStorageKey);
@@ -551,21 +427,11 @@ function AdminPage({ products, onRefresh }) {
     });
   }
 
-  useEffect(() => {
-    const storedExpiry = Number(localStorage.getItem(adminTokenExpiryStorageKey) || 0);
-    if (!token || !storedExpiry || storedExpiry <= Date.now()) {
-      localStorage.removeItem(adminTokenStorageKey);
-      localStorage.removeItem(adminTokenExpiryStorageKey);
-      setToken("");
-    }
-  }, [token]);
-
   if (!token) {
     return (
       <main className="page">
         <section className="panel admin-login">
           <h2>Acesso interno</h2>
-          <p className="muted">Apenas para gerenciamento interno da loja.</p>
           <form className="form" onSubmit={authLogin}>
             <input
               value={typedSecret}
@@ -640,22 +506,7 @@ function AdminPage({ products, onRefresh }) {
 
       <section className="grid">
         {products.map((product) => (
-          <article className="product-card" key={product.id}>
-            <div className="media">
-              {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
-            </div>
-            <h3>{product.name}</h3>
-            <p>{product.description}</p>
-            <strong>{money(product.price)}</strong>
-            <div className="actions">
-              <button type="button" onClick={() => startEdit(product)} className="ghost">
-                Editar
-              </button>
-              <button type="button" onClick={() => deleteProduct(product.id)} className="danger">
-                Excluir
-              </button>
-            </div>
-          </article>
+          <ProductCard key={product.id} product={product} />
         ))}
       </section>
     </main>
