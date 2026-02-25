@@ -27,6 +27,7 @@ Antes de iniciar, configure `backend/.env`:
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require
 DATABASE_SSL=true
+ADMIN_SECRET=sua-senha-admin-forte
 PORT=4000
 ```
 
@@ -51,6 +52,13 @@ Frontend em `http://localhost:5173`.
 
 - `GET /api/health`
 - `GET /api/products`
-- `POST /api/products`
-- `PUT /api/products/:id`
-- `DELETE /api/products/:id`
+- `POST /api/admin/session` (login admin)
+- `POST /api/products` (admin, header `x-admin-secret`)
+- `PUT /api/products/:id` (admin, header `x-admin-secret`)
+- `DELETE /api/products/:id` (admin, header `x-admin-secret`)
+
+## Paginas Frontend
+
+- `/` loja publica premium + carrinho
+- `/compras` checkout
+- `/admin-secreto` painel admin para CRUD de produtos

@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const ADMIN_SECRET = process.env.ADMIN_SECRET || "troque-esta-senha";
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL nao configurada.");
@@ -19,8 +20,24 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
+function requireAdmin(req, res, next) {
+  const provided = req.headers["x-admin-secret"];
+  if (!provided || provided !== ADMIN_SECRET) {
+    return res.status(401).json({ error: "Acesso admin negado." });
+  }
+  next();
+}
+
 app.get("/api/health", (_, res) => {
   res.json({ ok: true });
+});
+
+app.post("/api/admin/session", (req, res) => {
+  const { secret } = req.body || {};
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "Senha admin invalida." });
+  }
+  return res.json({ ok: true });
 });
 
 async function initDatabase() {
@@ -65,7 +82,7 @@ app.get("/api/products", async (_, res) => {
   }
 });
 
-app.post("/api/products", async (req, res) => {
+app.post("/api/products", requireAdmin, async (req, res) => {
   const input = parseProductInput(req.body);
   if (input.error) {
     return res.status(400).json({ error: input.error });
@@ -86,7 +103,7 @@ app.post("/api/products", async (req, res) => {
   }
 });
 
-app.put("/api/products/:id", async (req, res) => {
+app.put("/api/products/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "ID invalido." });
@@ -118,7 +135,7 @@ app.put("/api/products/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/products/:id", async (req, res) => {
+app.delete("/api/products/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "ID invalido." });
