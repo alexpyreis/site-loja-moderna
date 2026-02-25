@@ -1,0 +1,148 @@
+:root {
+  font-family: "Poppins", sans-serif;
+  color: #1f2937;
+  background: radial-gradient(circle at top left, #f9d8c7, #f3f4f6 40%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff8f2, #eef2ff);
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.hero {
+  padding: 24px;
+  border-radius: 24px;
+  color: #fff;
+  background: linear-gradient(135deg, #c2410c, #ea580c);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+.hero p {
+  margin: 8px 0 0;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid #f2f2f2;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.panel h2 {
+  margin: 0 0 14px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+textarea {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #ea580c;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  display: grid;
+  gap: 8px;
+}
+
+.card h3 {
+  margin: 0;
+}
+
+.card p {
+  margin: 0;
+  color: #4b5563;
+  min-height: 42px;
+}
+
+.media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  background: #f3f4f6;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #6b7280;
+}
+
+.media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.danger {
+  background: #dc2626;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: 600;
+}
