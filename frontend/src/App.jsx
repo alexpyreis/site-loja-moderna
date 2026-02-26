@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { NavLink, Route, Routes } from "react-router-dom";
 
@@ -140,6 +140,7 @@ export default function App() {
               products={products}
               loading={loading}
               error={error}
+              onRefresh={loadProducts}
               onAddToCart={addToCart}
             />
           }
@@ -192,52 +193,99 @@ export default function App() {
   );
 }
 
-function StorePage({ products, loading, error, onAddToCart }) {
-  const [mainProduct, leftProduct, rightProduct] = products;
+function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
+  const railRef = useRef(null);
+  const featured = useMemo(() => products.slice(0, 10), [products]);
+  const budget = useMemo(
+    () => [...products].sort((a, b) => Number(a.price) - Number(b.price)).slice(0, 6),
+    [products]
+  );
+  const premium = useMemo(
+    () => [...products].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 6),
+    [products]
+  );
 
-  const launchCards = [
-    { product: leftProduct, variant: "side" },
-    { product: mainProduct, variant: "main" },
-    { product: rightProduct, variant: "side" },
-  ];
+  function scrollRail(direction) {
+    if (!railRef.current) return;
+    railRef.current.scrollBy({
+      left: direction * Math.max(railRef.current.clientWidth * 0.8, 280),
+      behavior: "smooth",
+    });
+  }
 
   return (
-    <main className="showcase-page">
-      <section className="launches-panel">
-        <div className="launches-top-band" />
-        <h1>LANÇAMENTOS</h1>
-
-        <div className="launches-grid">
-          {launchCards.map(({ product, variant }, index) => (
-            <article key={`${product?.id || "placeholder"}-${index}`} className={`launch-card ${variant}`}>
-              <div className="launch-media">
-                {product?.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span />}
-              </div>
-              <div
-                className="launch-strip"
-                onClick={() => variant === "main" && product && onAddToCart(product)}
-                role={variant === "main" && product ? "button" : undefined}
-                tabIndex={variant === "main" && product ? 0 : undefined}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && variant === "main" && product) onAddToCart(product);
-                }}
-              >
-                {variant === "main" && product && (
-                  <p>
-                    <strong>{product.name}</strong>
-                    <span>{money(product.price)}</span>
-                  </p>
-                )}
-              </div>
-            </article>
-          ))}
+    <main className="page">
+      <section className="hero">
+        <div>
+          <span className="kicker">STUDIO COLLECTION</span>
+          <h1>Loja refeita do zero com foco em design e performance.</h1>
+          <p>Visual premium escuro, responsivo de verdade e atualizado automaticamente pelo seu backend.</p>
         </div>
-
-        <h2>COLLECTIONS</h2>
+        <button type="button" className="ghost" onClick={onRefresh}>
+          Atualizar catalogo
+        </button>
       </section>
 
       {error && <p className="error">{error}</p>}
-      {loading && <p className="muted">Carregando produtos...</p>}
+      {loading ? (
+        <p className="muted">Carregando produtos...</p>
+      ) : (
+        <>
+          <section className="panel">
+            <div className="section-head">
+              <h2>Destaques ({featured.length})</h2>
+              {featured.length > 1 && (
+                <div className="controls">
+                  <button type="button" className="ghost" onClick={() => scrollRail(-1)}>
+                    {"<"}
+                  </button>
+                  <button type="button" className="ghost" onClick={() => scrollRail(1)}>
+                    {">"}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="featured-rail" ref={railRef}>
+              {featured.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} compact />
+              ))}
+            </div>
+          </section>
+
+          <section className="catalog-block">
+            <div className="section-head">
+              <h2>Mais acessiveis</h2>
+            </div>
+            <div className="grid">
+              {budget.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+              ))}
+            </div>
+          </section>
+
+          <section className="catalog-block">
+            <div className="section-head">
+              <h2>Premium</h2>
+            </div>
+            <div className="grid">
+              {premium.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+              ))}
+            </div>
+          </section>
+
+          <section className="catalog-block">
+            <div className="section-head">
+              <h2>Todos os produtos ({products.length})</h2>
+            </div>
+            <div className="grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
     </main>
   );
 }
