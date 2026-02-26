@@ -232,7 +232,7 @@ function StorePage({ products, loading, error, onAddToCart }) {
           <h2>Lancamentos</h2>
         </div>
         <div className="launches-shell">
-          <div className={`launches-track ${launchTick % 2 === 0 ? "swap-next" : "swap-prev"}`} key={launchTick}>
+          <div className="launches-track swap-left" key={launchTick}>
             {launchVisible.map((product, index) => (
               <article
                 key={product.id}
