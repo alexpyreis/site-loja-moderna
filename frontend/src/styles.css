@@ -357,6 +357,118 @@ textarea {
   max-width: 440px;
 }
 
+.showcase-page {
+  min-height: calc(100vh - 72px);
+  background: linear-gradient(90deg, #2e2e30, #28292c);
+  padding: 0 0 46px;
+}
+
+.launches-panel {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.launches-top-band {
+  height: 78px;
+  background: #000;
+}
+
+.launches-panel h1 {
+  margin: 12px 0 16px;
+  text-align: center;
+  font-size: clamp(1.8rem, 2.4vw, 2.15rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.launches-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  align-items: start;
+  gap: 32px;
+  padding: 0 34px;
+}
+
+.launch-card {
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.launch-media {
+  width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #666367;
+}
+
+.launch-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  filter: grayscale(1) contrast(1.05);
+}
+
+.launch-media span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #666367;
+}
+
+.launch-card.side .launch-media {
+  height: 250px;
+}
+
+.launch-card.main .launch-media {
+  height: 300px;
+}
+
+.launch-strip {
+  margin-top: -34px;
+  height: 76px;
+  border-radius: 28px;
+  background: #d6d6d8;
+  padding: 12px 18px;
+}
+
+.launch-card.main .launch-strip {
+  cursor: pointer;
+}
+
+.launch-strip p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #1b1b1b;
+}
+
+.launch-strip strong {
+  max-width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.launches-panel h2 {
+  margin: 72px 0 0;
+  font-size: clamp(2rem, 3vw, 2.35rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 0 34px;
+}
+
+.admin-products .admin-product {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.admin-products .admin-product .product-card {
+  border: 0;
+}
+
 @media (max-width: 960px) {
   .hero {
     align-items: start;
@@ -386,6 +498,22 @@ textarea {
     bottom: 10px;
     max-height: 74vh;
   }
+
+  .launches-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 0 14px;
+  }
+
+  .launch-card.side .launch-media,
+  .launch-card.main .launch-media {
+    height: 260px;
+  }
+
+  .launches-panel h2 {
+    margin-top: 40px;
+    padding: 0 14px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -410,5 +538,9 @@ textarea {
   .actions button,
   .hero button {
     width: 100%;
+  }
+
+  .launches-top-band {
+    height: 56px;
   }
 }
