@@ -247,7 +247,18 @@ function StorePage({ products, loading, error, onAddToCart }) {
                 </div>
                 <div className="launch-strip">
                   <h3>{product.name}</h3>
-                  <p>{money(product.price)}</p>
+                  <div className="launch-strip-bottom">
+                    <p>{money(product.price)}</p>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onAddToCart(product);
+                      }}
+                    >
+                      Adicionar
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}

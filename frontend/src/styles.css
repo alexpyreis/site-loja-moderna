@@ -176,7 +176,7 @@ nav a.active {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 24px;
+  gap: 0;
   padding: 8px 0 20px;
   min-height: 660px;
 }
@@ -191,11 +191,22 @@ nav a.active {
   overflow: hidden;
   border: 1px solid #2a2a2a;
   background: #111213;
+  z-index: 1;
 }
 
 .launch-card.featured {
   width: 500px;
   height: 640px;
+  z-index: 3;
+  box-shadow: 0 34px 70px rgba(0, 0, 0, 0.5);
+}
+
+.launches-track .launch-card:first-child {
+  margin-right: -34px;
+}
+
+.launches-track .launch-card:last-child {
+  margin-left: -34px;
 }
 
 .launch-image {
@@ -232,19 +243,17 @@ nav a.active {
   left: 0;
   right: 0;
   bottom: 0;
-  min-height: 88px;
+  min-height: 96px;
   background: #090909;
   color: #f2f2f2;
   padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  gap: 12px;
 }
 
 .launch-card.featured .launch-strip {
-  min-height: 100px;
-  padding: 16px 20px;
+  min-height: 138px;
+  padding: 16px 22px 18px;
 }
 
 .launch-strip h3,
@@ -270,12 +279,18 @@ nav a.active {
 .launch-strip p {
   color: #a8a8a8;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
-.launch-strip::after {
-  content: "Adicionar";
-  min-width: 108px;
-  text-align: center;
+.launch-strip-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.launch-strip-bottom button {
+  min-width: 110px;
   border-radius: 14px;
   background: #f3f3f3;
   color: #0d0d0d;
@@ -608,6 +623,11 @@ textarea {
     min-height: 430px;
   }
 
+  .launches-track .launch-card:first-child,
+  .launches-track .launch-card:last-child {
+    margin: 0;
+  }
+
   .launch-card {
     width: 290px;
     height: 400px;
@@ -616,6 +636,10 @@ textarea {
   .launch-card.featured {
     width: 330px;
     height: 450px;
+  }
+
+  .launch-card.featured .launch-strip {
+    min-height: 112px;
   }
 }
 
