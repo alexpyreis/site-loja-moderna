@@ -154,6 +154,207 @@ nav a.active {
   gap: 12px;
 }
 
+.launches {
+  display: grid;
+  gap: 14px;
+}
+
+.launches .section-head h2,
+.catalog-block .section-head h2 {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.launches-shell {
+  position: relative;
+}
+
+.launch-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.launch-fade.left {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.launch-fade.right {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.launches-rail {
+  display: flex;
+  gap: 26px;
+  overflow-x: auto;
+  padding: 8px 56px 20px;
+  scroll-snap-type: x mandatory;
+}
+
+.launches-rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.launches-rail::-webkit-scrollbar-thumb {
+  background: #2e2e2e;
+  border-radius: 999px;
+}
+
+.launch-card {
+  position: relative;
+  flex: 0 0 280px;
+  height: 360px;
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition: transform 280ms ease;
+}
+
+.launch-card.featured {
+  flex-basis: 340px;
+  height: 430px;
+}
+
+.launch-image {
+  position: absolute;
+  inset: 0 0 72px;
+  border-radius: 32px 32px 22px 22px;
+  overflow: hidden;
+  background: #4b4b4b;
+}
+
+.launch-card.featured .launch-image {
+  inset: 0 0 84px;
+  border-radius: 38px 38px 24px 24px;
+}
+
+.launch-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.95) contrast(1.08);
+  opacity: 0.42;
+  transition: transform 520ms ease, opacity 520ms ease;
+}
+
+.launch-image span {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #909090;
+}
+
+.launch-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 86px;
+  border-radius: 34px;
+  background: #e8e8e8;
+  color: #111;
+  padding: 14px 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.launch-card.featured .launch-strip {
+  min-height: 102px;
+  border-radius: 42px;
+  padding: 18px 22px;
+}
+
+.launch-strip h3,
+.launch-strip p {
+  margin: 0;
+}
+
+.launch-strip h3 {
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.launch-card.featured .launch-strip h3 {
+  font-size: 1.05rem;
+}
+
+.launch-strip p {
+  color: #444;
+  font-size: 0.85rem;
+}
+
+.launch-card:hover,
+.launch-card:focus-within {
+  transform: scale(1.07);
+  z-index: 10;
+}
+
+.launch-card:hover .launch-image img,
+.launch-card:focus-within .launch-image img {
+  transform: scale(1.1);
+  opacity: 0.72;
+}
+
+.collections-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.collection-card {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.collection-image {
+  aspect-ratio: 1 / 1;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.collection-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: grayscale(0.9) contrast(1.1);
+  transition: transform 380ms ease, opacity 380ms ease;
+}
+
+.collection-image span {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #777;
+}
+
+.collection-card:hover .collection-image img {
+  transform: scale(1.08);
+  opacity: 0.72;
+}
+
+.collection-info {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .grid {
   display: grid;
   gap: 12px;
@@ -368,11 +569,6 @@ textarea {
 }
 
 @media (max-width: 960px) {
-  .hero {
-    align-items: start;
-    flex-direction: column;
-  }
-
   .checkout-grid {
     grid-template-columns: 1fr;
   }
@@ -396,6 +592,25 @@ textarea {
     bottom: 10px;
     max-height: 74vh;
   }
+
+  .launches-rail {
+    padding: 8px 20px 20px;
+    gap: 18px;
+  }
+
+  .launch-fade {
+    display: none;
+  }
+
+  .launch-card {
+    flex-basis: 260px;
+    height: 330px;
+  }
+
+  .launch-card.featured {
+    flex-basis: 300px;
+    height: 390px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -418,7 +633,7 @@ textarea {
 
   .product-foot button,
   .actions button,
-  .hero button {
+  .collection-info button {
     width: 100%;
   }
 }

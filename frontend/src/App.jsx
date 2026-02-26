@@ -196,95 +196,94 @@ export default function App() {
 function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
   const railRef = useRef(null);
   const featured = useMemo(() => products.slice(0, 10), [products]);
-  const budget = useMemo(
-    () => [...products].sort((a, b) => Number(a.price) - Number(b.price)).slice(0, 6),
-    [products]
-  );
-  const premium = useMemo(
-    () => [...products].sort((a, b) => Number(b.price) - Number(a.price)).slice(0, 6),
-    [products]
-  );
+  const collections = useMemo(() => products.slice(0, 4), [products]);
 
   function scrollRail(direction) {
     if (!railRef.current) return;
     railRef.current.scrollBy({
-      left: direction * Math.max(railRef.current.clientWidth * 0.8, 280),
+      left: direction * Math.max(railRef.current.clientWidth * 0.7, 260),
       behavior: "smooth",
     });
   }
 
+  function cardVariant(index) {
+    return index % 3 === 1 ? "launch-card featured" : "launch-card";
+  }
+
   return (
     <main className="page">
-      <section className="hero">
-        <div>
-          <span className="kicker">STUDIO COLLECTION</span>
-          <h1>Loja refeita do zero com foco em design e performance.</h1>
-          <p>Visual premium escuro, responsivo de verdade e atualizado automaticamente pelo seu backend.</p>
+      <section className="launches">
+        <div className="section-head">
+          <h2>Lancamentos</h2>
+          <div className="controls">
+            <button type="button" className="ghost" onClick={() => scrollRail(-1)}>
+              {"<"}
+            </button>
+            <button type="button" className="ghost" onClick={() => scrollRail(1)}>
+              {">"}
+            </button>
+            <button type="button" className="ghost" onClick={onRefresh}>
+              Atualizar
+            </button>
+          </div>
         </div>
-        <button type="button" className="ghost" onClick={onRefresh}>
-          Atualizar catalogo
-        </button>
+        <div className="launches-shell">
+          <div className="launch-fade left" />
+          <div className="launch-fade right" />
+          <div className="launches-rail" ref={railRef}>
+            {featured.map((product, index) => (
+              <article
+                key={product.id}
+                className={cardVariant(index)}
+                role="button"
+                tabIndex={0}
+                onClick={() => onAddToCart(product)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") onAddToCart(product);
+                }}
+              >
+                <div className="launch-image">
+                  {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
+                </div>
+                <div className="launch-strip">
+                  <h3>{product.name}</h3>
+                  <p>{money(product.price)}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
       {error && <p className="error">{error}</p>}
       {loading ? (
         <p className="muted">Carregando produtos...</p>
       ) : (
-        <>
-          <section className="panel">
-            <div className="section-head">
-              <h2>Destaques ({featured.length})</h2>
-              {featured.length > 1 && (
-                <div className="controls">
-                  <button type="button" className="ghost" onClick={() => scrollRail(-1)}>
-                    {"<"}
-                  </button>
-                  <button type="button" className="ghost" onClick={() => scrollRail(1)}>
-                    {">"}
+        <section className="catalog-block">
+          <div className="section-head">
+            <h2>Collections</h2>
+          </div>
+          <div className="collections-grid">
+            {collections.map((product) => (
+              <article key={product.id} className="collection-card">
+                <div className="collection-image">
+                  {product.imageUrl ? <img src={product.imageUrl} alt={product.name} /> : <span>Sem imagem</span>}
+                </div>
+                <div className="collection-info">
+                  <strong>{product.name}</strong>
+                  <button type="button" onClick={() => onAddToCart(product)}>
+                    Adicionar
                   </button>
                 </div>
-              )}
-            </div>
-            <div className="featured-rail" ref={railRef}>
-              {featured.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} compact />
-              ))}
-            </div>
-          </section>
-
-          <section className="catalog-block">
-            <div className="section-head">
-              <h2>Mais acessiveis</h2>
-            </div>
-            <div className="grid">
-              {budget.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-              ))}
-            </div>
-          </section>
-
-          <section className="catalog-block">
-            <div className="section-head">
-              <h2>Premium</h2>
-            </div>
-            <div className="grid">
-              {premium.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-              ))}
-            </div>
-          </section>
-
-          <section className="catalog-block">
-            <div className="section-head">
-              <h2>Todos os produtos ({products.length})</h2>
-            </div>
-            <div className="grid">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-              ))}
-            </div>
-          </section>
-        </>
+              </article>
+            ))}
+            {!collections.length && (
+              <div className="panel">
+                <p className="muted">Cadastre produtos para preencher as collections.</p>
+              </div>
+            )}
+          </div>
+        </section>
       )}
     </main>
   );
