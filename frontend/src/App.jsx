@@ -128,7 +128,10 @@ export default function App() {
           <NavLink to="/compras">Compras</NavLink>
         </nav>
         <button className="cart-pill" onClick={() => setCartOpen((v) => !v)} type="button">
-          Carrinho ({cartCount})
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 4h-2l-1 2v1h2.2l2.4 8.2c.2.7.9 1.3 1.7 1.3h8.9v-2h-8.7l-.4-1.5h8.9c.8 0 1.4-.5 1.6-1.2l1.3-4.8h-11.9l-.5-1.8-.6-2.2zm3.2 14.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zm7.1 0a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6z" />
+          </svg>
+          <span>{cartCount}</span>
         </button>
       </header>
 
@@ -140,7 +143,6 @@ export default function App() {
               products={products}
               loading={loading}
               error={error}
-              onRefresh={loadProducts}
               onAddToCart={addToCart}
             />
           }
@@ -193,7 +195,7 @@ export default function App() {
   );
 }
 
-function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
+function StorePage({ products, loading, error, onAddToCart }) {
   const featured = useMemo(() => products.slice(0, 10), [products]);
   const collections = useMemo(() => products.slice(0, 4), [products]);
   const [launchStart, setLaunchStart] = useState(0);
@@ -226,11 +228,6 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
       <section className="launches">
         <div className="section-head">
           <h2>Lancamentos</h2>
-          <div className="controls">
-            <button type="button" className="ghost" onClick={onRefresh}>
-              Atualizar
-            </button>
-          </div>
         </div>
         <div className="launches-shell">
           <div className="launches-track">
