@@ -179,6 +179,7 @@ nav a.active {
   gap: 0;
   padding: 8px 0 20px;
   min-height: 660px;
+  animation: launches-swap 720ms ease;
 }
 
 .launch-card {
@@ -201,12 +202,43 @@ nav a.active {
   box-shadow: 0 34px 70px rgba(0, 0, 0, 0.5);
 }
 
+.launch-card.side .launch-strip {
+  min-height: 78px;
+  padding: 10px 14px;
+}
+
+.launch-card.side .launch-strip h3 {
+  font-size: 0.9rem;
+  max-width: 170px;
+}
+
+.launch-card.side .launch-strip p {
+  font-size: 0.8rem;
+}
+
+.launch-card.side .launch-strip-bottom button {
+  min-width: 98px;
+  padding: 7px 10px;
+  border-radius: 12px;
+}
+
 .launches-track .launch-card:first-child {
   margin-right: -34px;
 }
 
 .launches-track .launch-card:last-child {
   margin-left: -34px;
+}
+
+@keyframes launches-swap {
+  0% {
+    opacity: 0.2;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .launch-image {

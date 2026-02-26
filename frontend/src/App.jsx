@@ -199,6 +199,7 @@ function StorePage({ products, loading, error, onAddToCart }) {
   const featured = useMemo(() => products.slice(0, 10), [products]);
   const collections = useMemo(() => products.slice(0, 4), [products]);
   const [launchStart, setLaunchStart] = useState(0);
+  const [launchTick, setLaunchTick] = useState(0);
 
   useEffect(() => {
     setLaunchStart(0);
@@ -208,7 +209,8 @@ function StorePage({ products, loading, error, onAddToCart }) {
     if (featured.length <= 3) return;
     const timer = setInterval(() => {
       setLaunchStart((prev) => (prev + 1) % featured.length);
-    }, 3000);
+      setLaunchTick((prev) => prev + 1);
+    }, 4600);
     return () => clearInterval(timer);
   }, [featured.length]);
 
@@ -220,7 +222,7 @@ function StorePage({ products, loading, error, onAddToCart }) {
 
   function cardVariant(index) {
     if (launchVisible.length === 1) return "launch-card featured";
-    return index === 1 ? "launch-card featured" : "launch-card";
+    return index === 1 ? "launch-card featured" : "launch-card side";
   }
 
   return (
@@ -230,7 +232,7 @@ function StorePage({ products, loading, error, onAddToCart }) {
           <h2>Lancamentos</h2>
         </div>
         <div className="launches-shell">
-          <div className="launches-track">
+          <div className="launches-track" key={launchTick}>
             {launchVisible.map((product, index) => (
               <article
                 key={product.id}
