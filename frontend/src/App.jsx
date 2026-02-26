@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { NavLink, Route, Routes } from "react-router-dom";
 
@@ -194,20 +194,31 @@ export default function App() {
 }
 
 function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
-  const railRef = useRef(null);
   const featured = useMemo(() => products.slice(0, 10), [products]);
   const collections = useMemo(() => products.slice(0, 4), [products]);
+  const [launchStart, setLaunchStart] = useState(0);
 
-  function scrollRail(direction) {
-    if (!railRef.current) return;
-    railRef.current.scrollBy({
-      left: direction * Math.max(railRef.current.clientWidth * 0.7, 260),
-      behavior: "smooth",
-    });
-  }
+  useEffect(() => {
+    setLaunchStart(0);
+  }, [featured.length]);
+
+  useEffect(() => {
+    if (featured.length <= 3) return;
+    const timer = setInterval(() => {
+      setLaunchStart((prev) => (prev + 1) % featured.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [featured.length]);
+
+  const launchVisible = useMemo(() => {
+    if (!featured.length) return [];
+    const count = Math.min(3, featured.length);
+    return Array.from({ length: count }, (_, offset) => featured[(launchStart + offset) % featured.length]);
+  }, [featured, launchStart]);
 
   function cardVariant(index) {
-    return index % 3 === 1 ? "launch-card featured" : "launch-card";
+    if (launchVisible.length === 1) return "launch-card featured";
+    return index === 1 ? "launch-card featured" : "launch-card";
   }
 
   return (
@@ -216,22 +227,14 @@ function StorePage({ products, loading, error, onRefresh, onAddToCart }) {
         <div className="section-head">
           <h2>Lancamentos</h2>
           <div className="controls">
-            <button type="button" className="ghost" onClick={() => scrollRail(-1)}>
-              {"<"}
-            </button>
-            <button type="button" className="ghost" onClick={() => scrollRail(1)}>
-              {">"}
-            </button>
             <button type="button" className="ghost" onClick={onRefresh}>
               Atualizar
             </button>
           </div>
         </div>
         <div className="launches-shell">
-          <div className="launch-fade left" />
-          <div className="launch-fade right" />
-          <div className="launches-rail" ref={railRef}>
-            {featured.map((product, index) => (
+          <div className="launches-track">
+            {launchVisible.map((product, index) => (
               <article
                 key={product.id}
                 className={cardVariant(index)}

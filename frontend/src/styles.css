@@ -169,55 +169,28 @@ nav a.active {
 
 .launches-shell {
   position: relative;
+  overflow: hidden;
 }
 
-.launch-fade {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 56px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.launch-fade.left {
-  left: 0;
-  background: linear-gradient(to right, var(--bg), transparent);
-}
-
-.launch-fade.right {
-  right: 0;
-  background: linear-gradient(to left, var(--bg), transparent);
-}
-
-.launches-rail {
+.launches-track {
   display: flex;
+  justify-content: center;
+  align-items: flex-end;
   gap: 26px;
-  overflow-x: auto;
-  padding: 8px 56px 20px;
-  scroll-snap-type: x mandatory;
-}
-
-.launches-rail::-webkit-scrollbar {
-  height: 6px;
-}
-
-.launches-rail::-webkit-scrollbar-thumb {
-  background: #2e2e2e;
-  border-radius: 999px;
+  padding: 8px 0 20px;
+  min-height: 450px;
 }
 
 .launch-card {
   position: relative;
-  flex: 0 0 280px;
+  width: 280px;
   height: 360px;
-  scroll-snap-align: center;
   cursor: pointer;
   transition: transform 280ms ease;
 }
 
 .launch-card.featured {
-  flex-basis: 340px;
+  width: 340px;
   height: 430px;
 }
 
@@ -593,22 +566,18 @@ textarea {
     max-height: 74vh;
   }
 
-  .launches-rail {
-    padding: 8px 20px 20px;
-    gap: 18px;
-  }
-
-  .launch-fade {
-    display: none;
+  .launches-track {
+    gap: 12px;
+    min-height: 390px;
   }
 
   .launch-card {
-    flex-basis: 260px;
+    width: 260px;
     height: 330px;
   }
 
   .launch-card.featured {
-    flex-basis: 300px;
+    width: 300px;
     height: 390px;
   }
 }
